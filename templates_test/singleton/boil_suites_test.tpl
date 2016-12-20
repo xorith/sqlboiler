@@ -105,6 +105,16 @@ func TestCount(t *testing.T) {
   {{- end -}}
 }
 
+func TestExistsFinisher(t *testing.T) {
+  {{- range $index, $table := .Tables}}
+  {{- if $table.IsJoinTable -}}
+  {{- else -}}
+  {{- $tableName := $table.Name | plural | titleCase -}}
+  t.Run("{{$tableName}}", test{{$tableName}}ExistsFinisher)
+  {{end -}}
+  {{- end -}}
+}
+
 {{if not .NoHooks -}}
 func TestHooks(t *testing.T) {
   {{- range $index, $table := .Tables}}

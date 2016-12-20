@@ -95,6 +95,15 @@ func test{{$tableNamePlural}}Count(t *testing.T) {
 
 	tx := MustTx(boil.Begin())
 	defer tx.Rollback()
+	count, err := {{$tableNamePlural}}(tx).Count()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if count != 0 {
+		t.Error("want 0 records found")
+	}
+
 	if err = {{$varNameSingular}}One.Insert(tx); err != nil {
 		t.Error(err)
 	}
@@ -102,12 +111,47 @@ func test{{$tableNamePlural}}Count(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := {{$tableNamePlural}}(tx).Count()
+	count, err = {{$tableNamePlural}}(tx).Count()
 	if err != nil {
 		t.Error(err)
 	}
 
 	if count != 2 {
 		t.Error("want 2 records, got:", count)
+	}
+}
+
+func test{{$tableNamePlural}}ExistsFinisher(t *testing.T) {
+	t.Parallel()
+
+	var err error
+	seed := randomize.NewSeed()
+	{{$varNameSingular}}One := &{{$tableNameSingular}}{}
+	if err = randomize.Struct(seed, {{$varNameSingular}}One, {{$varNameSingular}}DBTypes, false, {{$varNameSingular}}ColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize {{$tableNameSingular}} struct: %s", err)
+	}
+
+	tx := MustTx(boil.Begin())
+	defer tx.Rollback()
+	exists, err := {{$tableNamePlural}}(tx).Exists()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if exists {
+		t.Error("the record should not exist")
+	}
+
+	if err = {{$varNameSingular}}One.Insert(tx); err != nil {
+		t.Error(err)
+	}
+
+	exists, err = {{$tableNamePlural}}(tx).Exists()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !exists {
+		t.Error("wanted record to exist")
 	}
 }
